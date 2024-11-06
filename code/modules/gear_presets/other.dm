@@ -513,8 +513,8 @@
 
 	languages = list(LANGUAGE_ENGLISH, LANGUAGE_RUSSIAN, LANGUAGE_JAPANESE, LANGUAGE_CHINESE) //Just in case they are delivering to UPP or CLF...
 	idtype = /obj/item/card/id/pizza
-	assignment = "Pizza Deliverer"
-	rank = FACTION_PIZZA
+	assignment = FACTION_PIZZA
+	rank = "Pizza Deliverer"
 	skills = /datum/skills/civilian
 	faction = FACTION_PIZZA
 
