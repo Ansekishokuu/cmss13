@@ -20,7 +20,7 @@ window "mainwindow"
 		saved-params = "pos;size;is-minimized;is-maximized"
 		is-maximized = true
 		statusbar = false
-		icon = 'icons\\taskbar\\gml_distress.png'
+		icon = 'icons\\taskbar\\gml_trcm.png'
 		macro = "default"
 		menu = "menu"
 	elem "split"
