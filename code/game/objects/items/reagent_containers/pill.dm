@@ -186,8 +186,8 @@
 	pill_icon_class = "kelo"
 
 /obj/item/reagent_container/pill/oxycodone
-	pill_desc = "A Oxycodone pill. A powerful painkiller."
-	pill_initial_reagents = list("oxycodone" = 15)
+	pill_desc = "An Oxycodone pill. A powerful painkiller."
+	pill_initial_reagents = list("oxycodone" = 10)
 	pill_icon_class = "oxy"
 
 /obj/item/reagent_container/pill/paracetamol
@@ -276,3 +276,9 @@
 /obj/item/reagent_container/pill/stimulant
 	pill_initial_reagents = list("antag_stimulant" = 10)
 	pill_icon_class = "stim"
+
+/obj/item/reagent_container/pill/imialky
+	pill_desc = "An Imidazoline-Alkysine (2:1) pill. Heals brain and eye damage."
+	pill_initial_reagents = list("imidazoline" = 10, "alkysine" = 5)
+	pill_icon_class = "alky"
+

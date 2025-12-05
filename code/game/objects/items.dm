@@ -67,6 +67,8 @@
 	var/flags_item = NO_FLAGS
 	/// This is used to determine on which slots an item can fit.
 	var/flags_equip_slot = NO_FLAGS
+	///Last slot that item was equipped to (aka sticky slot)
+	var/last_equipped_slot
 
 	//Since any item can now be a piece of clothing, this has to be put here so all items share it.
 	/// This flag is used for various clothing/equipment item stuff
@@ -82,6 +84,8 @@
 	var/flags_heat_protection = NO_FLAGS
 	/// flags which determine which body parts are protected from cold. Use the HEAD, UPPER_TORSO, LOWER_TORSO, etc. flags. See setup.dm
 	var/flags_cold_protection = NO_FLAGS
+	/// flags which determine which body parts are hidden from view.
+	var/flags_bodypart_hidden = NO_FLAGS
 	/// Set this variable to determine up to which temperature (IN KELVIN) the item protects against heat damage. Keep at null to disable protection. Only protects areas set by flags_heat_protection flags
 	var/max_heat_protection_temperature
 	/// Set this variable to determine down to which temperature (IN KELVIN) the item protects against cold damage. 0 is NOT an acceptable number due to if(varname) tests!! Keep at null to disable protection. Only protects areas set by flags_cold_protection flags
@@ -336,6 +340,8 @@
 	if(isstorage(loc))
 		var/obj/item/storage/S = loc
 		S.remove_from_storage(src, user.loc, user)
+	else if(isturf(loc) && HAS_TRAIT(user, TRAIT_HAULED))
+		return
 
 	throwing = 0
 
@@ -408,15 +414,37 @@
 
 	appearance_flags &= ~NO_CLIENT_COLOR //So saturation/desaturation etc. effects affect it.
 
-// called just as an item is picked up (loc is not yet changed)
+/// Called just as an item is picked up (loc is not yet changed) and will return TRUE if the pickup wasn't canceled.
 /obj/item/proc/pickup(mob/user, silent)
 	SHOULD_CALL_PARENT(TRUE)
-	SEND_SIGNAL(src, COMSIG_ITEM_PICKUP, user)
+	if((SEND_SIGNAL(src, COMSIG_ITEM_PICKUP, user)) & COMSIG_ITEM_PICKUP_CANCELLED)
+		if(!silent)
+			to_chat(user, SPAN_WARNING("Can't pick [src] up!"))
+			balloon_alert(user, "can't pick up")
+		return FALSE
 	SEND_SIGNAL(user, COMSIG_MOB_PICKUP_ITEM, src)
 	setDir(SOUTH)//Always rotate it south. This resets it to default position, so you wouldn't be putting things on backwards
 	if(pickup_sound && !silent && src.loc?.z)
 		playsound(src, pickup_sound, pickupvol, pickup_vary)
 	do_pickup_animation(user)
+	return TRUE
+
+///Helper function for updating last_equipped_slot when item is drawn from storage
+/obj/item/proc/set_last_equipped_slot_of_storage(obj/item/storage/storage_item)
+	if(!isitem(storage_item))
+		return
+
+	var/obj/item/storage_item_storage = storage_item
+	while(isitem(storage_item_storage.loc)) // for stuff like pouches
+		storage_item_storage = storage_item_storage.loc
+
+	if(!storage_item_storage)
+		return
+	//don't put the fucking clothes back into the backpack we just pulled it out from
+	if(!isclothing(src))
+		last_equipped_slot = slot_to_in_storage_slot(storage_item_storage.last_equipped_slot)
+	else
+		last_equipped_slot = storage_item_storage.last_equipped_slot
 
 // called when this item is removed from a storage item, which is passed on as S. The loc variable is already set to the new destination before this is called.
 /obj/item/proc/on_exit_storage(obj/item/storage/S as obj)
@@ -428,6 +456,7 @@
 			S.flags_atom &= ~USES_HEARING
 	var/atom/location = S.get_loc_turf()
 	do_drop_animation(location)
+	set_last_equipped_slot_of_storage(S)
 
 // called when this item is added into a storage item, which is passed on as S. The loc variable is already set to the storage item.
 /obj/item/proc/on_enter_storage(obj/item/storage/S as obj)
@@ -462,6 +491,9 @@
 	SHOULD_CALL_PARENT(TRUE)
 
 	SEND_SIGNAL(src, COMSIG_ITEM_EQUIPPED, user, slot)
+
+	if(is_valid_sticky_slot(slot))
+		last_equipped_slot = slot
 
 	if(item_action_slot_check(user, slot))
 		add_verb(user, verbs)
@@ -823,10 +855,6 @@
 	if(src in usr)
 		attack_self(usr)
 
-
-/obj/item/proc/IsShield()
-	return FALSE
-
 /obj/item/proc/get_loc_turf()
 	var/atom/L = loc
 	while(L && !istype(L, /turf/))
@@ -852,6 +880,7 @@
 /obj/item/proc/zoom(mob/living/user, tileoffset = 11, viewsize = 12, keep_zoom = 0) //tileoffset is client view offset in the direction the user is facing. viewsize is how far out this thing zooms. 7 is normal view
 	if(!user)
 		return
+	QDEL_NULL(user.observed_atom)
 	var/zoom_device = zoomdevicename ? "\improper [zoomdevicename] of [src]" : "\improper [src]"
 
 	for(var/obj/item/I in user.contents)
@@ -891,8 +920,8 @@
 	//General reset in case anything goes wrong, the view will always reset to default unless zooming in.
 	if(user.client)
 		user.client.change_view(GLOB.world_view_size, src)
-		user.client.pixel_x = 0
-		user.client.pixel_y = 0
+		user.client.set_pixel_x(0)
+		user.client.set_pixel_y(0)
 
 /obj/item/proc/zoom_handle_mob_move_or_look(mob/living/mover, actually_moving, direction, specific_direction)
 	SIGNAL_HANDLER
@@ -929,17 +958,17 @@
 
 		switch(user.dir)
 			if(NORTH)
-				user.client.pixel_x = 0
-				user.client.pixel_y = viewoffset
+				user.client.set_pixel_x(0)
+				user.client.set_pixel_y(viewoffset)
 			if(SOUTH)
-				user.client.pixel_x = 0
-				user.client.pixel_y = -viewoffset
+				user.client.set_pixel_x(0)
+				user.client.set_pixel_y(-viewoffset)
 			if(EAST)
-				user.client.pixel_x = viewoffset
-				user.client.pixel_y = 0
+				user.client.set_pixel_x(viewoffset)
+				user.client.set_pixel_y(0)
 			if(WEST)
-				user.client.pixel_x = -viewoffset
-				user.client.pixel_y = 0
+				user.client.set_pixel_x(-viewoffset)
+				user.client.set_pixel_y(0)
 
 	SEND_SIGNAL(src, COMSIG_ITEM_ZOOM, user)
 	var/zoom_device = zoomdevicename ? "\improper [zoomdevicename] of [src]" : "\improper [src]"
@@ -1127,3 +1156,33 @@
 ///Called by /mob/living/carbon/swap_hand() when hands are swapped
 /obj/item/proc/hands_swapped(mob/living/carbon/swapper_of_hands)
 	return
+
+// formerly in gun_helpers.dm, moved here for universal usage
+/obj/item/proc/unique_action(mob/user)
+	return
+
+/obj/item/verb/use_unique_action()
+	set category = "Object"
+	set name = "Unique Action"
+	set desc = "Use anything unique your item is capable of."
+	set src = usr.contents
+
+	if(usr.is_mob_incapacitated() || !isturf(usr.loc))
+		return
+	if(!ishuman(usr) && !HAS_TRAIT(usr, TRAIT_OPPOSABLE_THUMBS))
+		to_chat(usr, SPAN_WARNING("Not right now."))
+		return
+
+	var/obj/item/held_item = usr.get_active_hand()
+	if(!held_item)
+		to_chat(usr, SPAN_WARNING("You need to be holding something to do that!"))
+		return
+
+	src = held_item
+
+	// For guns, check if we should use the active attachable instead
+	var/obj/item/weapon/gun/gun = src
+	if(isgun(gun) && gun.active_attachable)
+		src = gun.active_attachable
+
+	unique_action(usr)
