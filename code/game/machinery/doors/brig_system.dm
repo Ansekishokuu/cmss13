@@ -325,7 +325,7 @@
 		if (active_report.incident.status & BRIG_SENTENCE_PERMA)
 			disp2 = "PERM"
 		else
-			disp2 = "[add_zero(num2text((time_left / 60) % 60),2)]~[add_zero(num2text(time_left % 60), 2)]"
+			disp2 = "[add_leading(num2text((time_left / 60) % 60), 2, "0")]:[add_leading(num2text(time_left % 60), 2, "0")]"
 			if (length(disp2) > 5)
 				disp2 = "Error"
 

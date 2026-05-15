@@ -325,7 +325,7 @@
 	var/dat = {"
 	Current Game Mode: <b>[SSticker.mode.name]</b>
 	<br>
-	Round Duration: <b>[floor(world.time / 36000)]:[add_zero(world.time / 600 % 60, 2)]:[world.time / 100 % 6][world.time / 100 % 10]</b>
+	Round Duration: <b>[floor(world.time / 36000)]:[add_leading(world.time / 600 % 60, 2)]:[world.time / 100 % 6][world.time / 100 % 10]</b>
 	<br>
 	<input type='search' id='filter' onkeyup='handle_filter()' onblur='handle_filter()' name='filter_text' value='' style='width:100%;'>
 	<table rules=all frame=void border=0 cellspacing=5 cellpadding=3 id='searchable'>
@@ -373,7 +373,7 @@
 	if (SSticker.current_state >= GAME_STATE_PLAYING)
 		var/dat = "<html><body><h1><B>Round Status</B></h1>"
 		dat += "Current Game Mode: <B>[SSticker.mode.name]</B><BR>"
-		dat += "Round Duration: <B>[floor(world.time / 36000)]:[add_zero(world.time / 600 % 60, 2)]:[world.time / 100 % 6][world.time / 100 % 10]</B><BR>"
+		dat += "Round Duration: <B>[floor(world.time / 36000)]:[add_leading(world.time / 600 % 60, 2)]:[world.time / 100 % 6][world.time / 100 % 10]</B><BR>"
 
 		if(check_rights(R_DEBUG, 0))
 			dat += "<A href='byond://?_src_=vars;Vars=\ref[SSoldshuttle.shuttle_controller]'>VV Shuttle Controller</A><br><br>"

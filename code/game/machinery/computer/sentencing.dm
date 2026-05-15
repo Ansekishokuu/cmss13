@@ -145,7 +145,7 @@
 			if (istype(id))
 				if (incident && id.registered_name)
 					incident.criminal_name = id.registered_name
-					incident.criminal_gid = add_zero(num2hex(id.registered_gid), 6)
+					incident.criminal_gid = add_leading(num2hex(id.registered_gid), 6)
 					ping("\The [src] pings, \"Criminal [id.registered_name] verified.\"")
 			else
 				to_chat(usr, SPAN_INFO("You need the suspect ID in your hand, or grab them and use the terminal."))
@@ -248,7 +248,7 @@
 			if (istype(id))
 				if (incident && id.registered_name)
 					incident.criminal_name = id.registered_name
-					incident.criminal_gid = add_zero(num2hex(id.registered_gid), 6)
+					incident.criminal_gid = add_leading(num2hex(id.registered_gid), 6)
 					ping("\The [src] pings, \"Criminal [id.registered_name] verified.\"")
 
 	. = ..()

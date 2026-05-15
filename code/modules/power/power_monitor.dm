@@ -65,12 +65,12 @@
 
 		for(var/obj/structure/machinery/power/apc/current_apc in powernet.nodes)
 			data += "<tr>"
-			data += "<td>[copytext(add_tspace("[current_apc.area]", 30), 1, 30)]</td>"
+			data += "<td>[copytext(add_trailing("[current_apc.area]", 30), 1, 30)]</td>"
 			data += "<td>[status[current_apc.equipment + 1]]</td>"
 			data += "<td>[status[current_apc.lighting + 1]]</td>"
 			data += "<td>[status[current_apc.environ + 1]]</td>"
-			data += "<td>[add_lspace(current_apc.lastused_total, 6)]W</td>"
-			data += "<td>[current_apc.cell ? "[add_lspace(floor(current_apc.cell.percent()), 3)]% [charge_status[current_apc.charging+1]]" : "  N/C"]</td>"
+			data += "<td>[add_trailing(current_apc.lastused_total, 6)]W</td>"
+			data += "<td>[current_apc.cell ? "[add_trailing(floor(current_apc.cell.percent()), 3)]% [charge_status[current_apc.charging+1]]" : "  N/C"]</td>"
 			data += "</tr>"
 			total_demand += current_apc.lastused_total
 			total_actual_usage += current_apc.lastused_total_actual

@@ -2,7 +2,7 @@
 	var/datum/data/record/general_record = new /datum/data/record()
 	general_record.fields["name"] = "New Record"
 	general_record.name = "New Record"
-	general_record.fields["id"] = text("[]", add_zero(num2hex(rand(1, 1.6777215E7)), 6))
+	general_record.fields["id"] = text("[]", add_leading(num2hex(rand(1, 1.6777215E7)), 6))
 	general_record.fields["rank"] = "Unassigned"
 	general_record.fields["real_rank"] = "Unassigned"
 	general_record.fields["sex"] = "Male"
